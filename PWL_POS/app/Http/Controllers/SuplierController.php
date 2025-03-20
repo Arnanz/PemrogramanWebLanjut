@@ -22,11 +22,12 @@ class SuplierController extends Controller
         ];
 
         $activeMenu = 'suplier'; // Set menu yang sedang aktif
-
+        $suplier = SuplierModel::all();
         return view('suplier.index', [
             'breadcrumb' => $breadcrumb,
             'page' => $page,
-            'activeMenu' => $activeMenu
+            'activeMenu' => $activeMenu,
+            'suplier' => $suplier
         ]);
     }
 

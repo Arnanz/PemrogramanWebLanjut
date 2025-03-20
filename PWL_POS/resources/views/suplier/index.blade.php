@@ -48,44 +48,52 @@
     <script>
         $(document).ready(function() {
             var dataUser = $('#table_suplier').DataTable({
-                // serverSide: true, jika ingin menggunakan server side processing
                 serverSide: true,
                 ajax: {
-                    "url": "{{ url('suplier/list') }}",
-                    "dataType": "json",
-                    "type": "POST",
+                    url: "{{ url('suplier/list') }}",
+                    dataType: "json",
+                    type: "POST",
+                    data: function(d) {
+                        d.suplier_id = $('#suplier_id').val();
                     }
                 },
-                columns: [{
-                    // nomor urut dari laravel datatable addIndexColumn()
-                    data: "DT_RowIndex",
-                    className: "text-center",
-                    orderable: false,
-                    searchable: false
-                }, {
-                    data: "nama_suplier",
-                    className: "",
-                    // orderable: true, jika ingin kolom ini bisa diurutkan
-                    orderable: true,
-                    // searchable: true, jika ingin kolom ini bisa dicari
-                    searchable: true
-                }, {
-                    data: "kontak",
-                    className: "",
-                    orderable: true,
-                    searchable: true
-                }, {
-                    // mengambil data suplier hasil dari ORM berelasi
-                    data: "alamat",
-                    className: "",
-                    orderable: true,
-                    searchable: true
-                }, {
-                    data: "aksi",
-                    className: "",
-                    orderable: false,
-                    searchable: false
-                }]
+                columns: [
+                    {
+                        data: "DT_RowIndex",
+                        className: "text-center",
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: "nama_suplier",
+                        className: "",
+                        orderable: true,
+                        searchable: true
+                    },
+                    {
+                        data: "kontak",
+                        className: "",
+                        orderable: true,
+                        searchable: true
+                    },
+                    {
+                        data: "alamat",
+                        className: "",
+                        orderable: true,
+                        searchable: true
+                    },
+                    {
+                        data: "aksi",
+                        className: "",
+                        orderable: false,
+                        searchable: false
+                    }
+                ]
             });
+
+            $('#suplier_id').on('change', function () {
+                dataUser.ajax.reload();
+            });
+        });
     </script>
 @endpush
