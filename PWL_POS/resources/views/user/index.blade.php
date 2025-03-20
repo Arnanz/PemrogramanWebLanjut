@@ -56,7 +56,10 @@
                 ajax: {
                     "url": "{{ url('user/list') }}",
                     "dataType": "json",
-                    "type": "GET"
+                    "type": "GET",
+                    "data": function (d) {
+                        d.level_id = $('#level_id').val();
+                    }
                 },
                 columns: [
                     {
@@ -90,6 +93,10 @@
                         searchable: false
                     }
                 ]
+            });
+
+            $('#level_id').on('change', function () {
+                dataUser.ajax.reload();
             });
         });
     </script>
