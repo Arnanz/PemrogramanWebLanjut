@@ -25,6 +25,8 @@ Route::group(['prefix' => 'user'], function () {
     Route::get('/{id}', [UserController::class, 'show']);
     Route::get('/{id}/edit', [UserController::class, 'edit']);
     Route::put('/{id}', [UserController::class, 'update']);
+    Route::get('/{id}/edit_ajax', [UserController::class, 'edit_ajax']);        // Menampilkan halaman form edit user Ajax
+    Route::put('/{id}/update_ajax', [UserController::class, 'update_ajax']);    // menyimpan perubahan data level
     Route::delete('/{id}', [UserController::class, 'destroy']);
 });
 
@@ -35,7 +37,7 @@ Route::group(['prefix' => 'level'], function () {
     Route::post('/', [LevelController::class, 'store']);         // menyimpan data level baru
     Route::get('/{id}', [LevelController::class, 'show']);       // menampilkan detail level
     Route::get('/{id}/edit', [LevelController::class, 'edit']);  // Menampilkan halaman form edit level
-    Route::put('/{id}', [LevelController::class, 'update']);     // menyimpan perubahan data level
+    Route::put('/{id}', [LevelController::class, 'update']); 
     Route::delete('/{id}', [LevelController::class, 'destroy']); // menghapus data level
 });
 
