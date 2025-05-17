@@ -2,18 +2,34 @@
 
 use App\Http\Controllers\SuplierController;
 use App\Http\Controllers\BarangController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KategoriController; 
 use App\Http\Controllers\LevelController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
+Route::pattern('id', '[0-9]+'); // artinya ketika ada parameter id, maka harus berupa angka
 
-Route::get('/', function () {
-    return view('welcome');
-}); 
+// Routes for login (auth.login)
+Route::get('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/login', [AuthController::class, 'postlogin']);
+Route::get('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+// Menampilkan halaman register
+Route::get('/register', function () {
+    return view('auth.register');
+})->name('register.form');
 
-Route::get('/', [WelcomeController::class, 'index']);
+// Proses registrasi
+Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+
+Route::middleware(['auth'])->group(function () { //login dulu sebelum akses route dibawah
+    // Routes for dashboard (welcome.blade.php)
+    Route::get('/', [WelcomeController::class, 'index']);
+
+    //Route for profile
+    Route::post('/profile/update-avatar', [App\Http\Controllers\ProfileController::class, 'updateAvatar']);
+});
 
 Route::group(['prefix' => 'user'], function () {
     Route::get('/', [UserController::class, 'index']);
