@@ -32,36 +32,51 @@ class BarangController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        // Handle file upload
-        $image = $request->file('image');
+        try {
+            // Handle file upload
+            $imageName = null;
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                
+                // Generate unique filename
+                $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                
+                // Store image in storage/app/public/barang
+                $image->storeAs('public/barang', $imageName);
+            }
 
-        // Pastikan direktori public/barang ada
-        $path = public_path('storage/barang');
-        if (!file_exists($path)) {
-            mkdir($path, 0777, true);
+            // Create barang with image
+            $barang = BarangModel::create([
+                'barang_kode' => $request->barang_kode,
+                'barang_nama' => $request->barang_nama,
+                'harga_beli' => $request->harga_beli,
+                'harga_jual' => $request->harga_jual,
+                'kategori_id' => $request->kategori_id,
+                'image' => $imageName,
+            ]);
+
+            // Load relasi kategori untuk response
+            $barang->load('kategori');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data berhasil ditambahkan',
+                'data' => $barang
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Simpan gambar
-        $image->storeAs('public/barang', $image->hashName());
-
-        // Create barang with image
-        $barang = BarangModel::create([
-            'barang_kode' => $request->barang_kode,
-            'barang_nama' => $request->barang_nama,
-            'harga_beli' => $request->harga_beli,
-            'harga_jual' => $request->harga_jual,
-            'kategori_id' => $request->kategori_id,
-            'image' => $image->hashName(),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Data berhasil ditambahkan',
-            'data' => $barang
-        ], 201);
     }
 
     public function show($id)
@@ -103,41 +118,54 @@ class BarangController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        // Data untuk update
-        $data = [
-            'barang_kode' => $request->barang_kode,
-            'barang_nama' => $request->barang_nama,
-            'harga_beli' => $request->harga_beli,
-            'harga_jual' => $request->harga_jual,
-            'kategori_id' => $request->kategori_id,
-        ];
+        try {
+            // Data untuk update
+            $data = [
+                'barang_kode' => $request->barang_kode,
+                'barang_nama' => $request->barang_nama,
+                'harga_beli' => $request->harga_beli,
+                'harga_jual' => $request->harga_jual,
+                'kategori_id' => $request->kategori_id,
+            ];
 
-        // Jika ada file image baru
-        if ($request->hasFile('image')) {
-            // Hapus image lama jika ada
-            if ($barang->image) {
-                Storage::delete('public/barang/' . $barang->getRawOriginal('image'));
+            // Jika ada file image baru
+            if ($request->hasFile('image')) {
+                // Hapus image lama jika ada
+                if ($barang->getRawOriginal('image')) {
+                    Storage::delete('public/barang/' . $barang->getRawOriginal('image'));
+                }
+
+                // Upload image baru
+                $image = $request->file('image');
+                $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $image->storeAs('public/barang', $imageName);
+
+                // Tambahkan image ke data yang akan diupdate
+                $data['image'] = $imageName;
             }
 
-            // Upload image baru
-            $image = $request->file('image');
-            $imageName = time() . '.' . $image->extension();
-            $image->storeAs('public/barang', $imageName);
+            $barang->update($data);
+            $barang->load('kategori');
 
-            // Tambahkan image ke data yang akan diupdate
-            $data['image'] = $imageName;
+            return response()->json([
+                'success' => true,
+                'message' => 'Data berhasil diupdate',
+                'data' => $barang
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
-
-        $barang->update($data);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Data berhasil diupdate',
-            'data' => $barang
-        ]);
     }
 
     public function destroy($id)
@@ -151,16 +179,24 @@ class BarangController extends Controller
             ], 404);
         }
 
-        // Hapus file image jika ada
-        if ($barang->image) {
-            Storage::delete('public/barang/' . $barang->getRawOriginal('image'));
+        try {
+            // Hapus file image jika ada
+            if ($barang->getRawOriginal('image')) {
+                Storage::delete('public/barang/' . $barang->getRawOriginal('image'));
+            }
+
+            $barang->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data berhasil dihapus'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
-
-        $barang->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Data berhasil dihapus'
-        ]);
     }
 }

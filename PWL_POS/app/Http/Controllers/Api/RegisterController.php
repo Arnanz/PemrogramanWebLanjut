@@ -18,19 +18,31 @@ class RegisterController extends Controller
             'nama' => 'required',
             'password' => 'required',
             'level_id' => 'required',
-        
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
+
+        // Handle image upload
+        $image = $request->file('image');
+
+        //simpan ke direktori public/posts
+        if (!file_exists(public_path('storage/posts'))) {
+            mkdir(public_path('storage/posts'), 0777, true);
+        }
+
+        // Simpan gambar
+        $image->storeAs('public/posts', $image->hashName());
+
         //create user
         $user = UserModel::create([
             'username' => $request->username,
             'nama' => $request->nama,
             'password' => bcrypt($request->password),
             'level_id' => $request->level_id,
- 
+            'image' => $image->hashName(),
         ]);
 
         //return response JSON user is created
